@@ -16,6 +16,10 @@ services:
 
   artex:
     image: y0neqnine/artex-x:${ARTEX_TAG:-latest}
+    # 镜像拉不到时（未发布 / 网络不通）可用 install.sh 的回退路径本地构建：
+    # 先取 GitHub Release 的 linux 二进制放到 dist/<arch>/artex，再 docker compose build。
+    build:
+      context: .
     depends_on:
       postgres:
         condition: service_healthy

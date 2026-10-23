@@ -30,6 +30,38 @@ ensure_docker(){
   esac
 }
 
+# ── 拉不到镜像时：取 GitHub Release 二进制，本地构建镜像 ───
+build_image_from_release(){
+  local repo="Y0neQnine/ARTEX-X" arch tag ver zip url tmp
+  case "$(uname -m)" in
+    x86_64|amd64)  arch=amd64 ;;
+    aarch64|arm64) arch=arm64 ;;
+    *) die "不支持的架构：$(uname -m)" ;;
+  esac
+  command -v unzip >/dev/null 2>&1 || die "缺少 unzip，请先安装：apt install -y unzip"
+
+  info "查询 GitHub 最新 Release…"
+  tag="$(curl -fsSL --retry 3 "https://api.github.com/repos/${repo}/releases/latest" \
+          | grep -m1 '"tag_name"' | cut -d'"' -f4)"
+  [ -n "$tag" ] || die "取不到版本号：GitHub 不可达？"
+  ver="${tag#v}"
+  zip="artex-${ver}-linux-${arch}.zip"
+  url="https://github.com/${repo}/releases/download/${tag}/${zip}"
+
+  info "下载 ${url}"
+  tmp="/tmp/${zip}"
+  curl -fL --retry 3 -o "$tmp" "$url" || die "下载失败：$url"
+  mkdir -p "dist/${arch}"
+  unzip -j -o "$tmp" "*/artex" -d "dist/${arch}" >/dev/null || die "解压失败"
+  rm -f "$tmp"
+  [ -f "dist/${arch}/artex" ] || die "压缩包里没找到 artex 二进制"
+  chmod +x "dist/${arch}/artex"
+  ok "已准备二进制 dist/${arch}/artex（${tag}）"
+
+  info "本地构建镜像（首次要装系统工具与 Playwright，约 10~20 分钟）…"
+  docker compose build artex || die "镜像构建失败"
+}
+
 # ── ① 全部 Docker ───────────────────────────────
 install_docker(){
   ensure_docker
@@ -49,11 +81,15 @@ install_docker(){
   if ! docker compose pull; then
     warn "镜像拉取失败：镜像可能尚未发布，或 Docker Hub 网络不通"
     warn "国内网络可配置镜像加速：/etc/docker/daemon.json 加 registry-mirrors 后 systemctl restart docker（详见 README 方式一）"
-    if [ "$(ask '改为本地编译运行（方式②）? (y/n)' y)" = y ]; then
-      install_local
-      return
-    fi
-    die "已取消：请先解决镜像拉取问题后重试"
+    echo "改用什么方式继续？"
+    echo "  1) 下载 GitHub Release 二进制，本地构建镜像（仍是 Docker 部署，推荐）"
+    echo "  2) 本地编译运行（需要 Go >= 1.26 与 Node）"
+    echo "  3) 退出"
+    case "$(ask '选择' 1)" in
+      1) build_image_from_release ;;
+      2) install_local; return ;;
+      *) die "已取消：请先解决镜像拉取问题后重试" ;;
+    esac
   fi
   docker compose up -d
   ok "启动完成 → http://localhost:8787"

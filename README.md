@@ -77,7 +77,10 @@ cd ARTEX-X
 脚本会：检测 / 自动安装 Docker → 让你选 **① 全部 Docker** 或 **② 本地编译运行**：
 
 - **① 全部 Docker**：填一个 Postgres 密码（可回车随机）→ 自动写 `.env` → 拉取 `y0neqnine/artex-x` 镜像并 `docker compose up -d`。
-  镜像拉取失败时（镜像未发布 / 网络不通），脚本会提示原因，并询问是否改走本地编译运行。
+  镜像拉不下来时（镜像未发布 / Docker Hub 不通）脚本会让你三选一：
+  - **1）用 GitHub Release 的二进制本地构建镜像**——仍然是 Docker 部署，只需要 Docker，**不需要 Go/Node**（首次构建要装系统工具与 Playwright，约 10~20 分钟）；
+  - **2）本地编译运行**（见下面 ②，需要 Go + Node）；
+  - **3）退出**。
 - **② 本地运行**：选数据库（连已有 / 用 Docker 起一个）→ 生成 `config.json` → `go` 编译内嵌单二进制 → 启动。
 
 装好后打开 **http://localhost:8787**（首次进入 `/setup` 设置管理员密码）。
@@ -86,7 +89,7 @@ cd ARTEX-X
 >
 > ```bash
 > sudo tee /etc/docker/daemon.json >/dev/null <<'EOF'
-> { "registry-mirrors": ["https://<可用镜像站>/"] }
+> { "registry-mirrors": ["https://docker.m.daocloud.io/", "https://docker.1ms.run/", "https://docker.xuanyuan.me/"] }
 > EOF
 > sudo systemctl restart docker
 > docker info | grep -A3 -i mirror   # 确认已生效
