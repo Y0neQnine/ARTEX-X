@@ -15,7 +15,7 @@ services:
     restart: unless-stopped
 
   artex:
-    image: Y0neQnine/artex-x:${ARTEX_TAG:-latest}
+    image: y0neqnine/artex-x:${ARTEX_TAG:-latest}
     depends_on:
       postgres:
         condition: service_healthy

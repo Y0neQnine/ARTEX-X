@@ -120,7 +120,7 @@ jobs:
       - uses: docker/metadata-action@v5
         id: meta
         with:
-          images: Y0neQnine/artex-x
+          images: y0neqnine/artex-x
           tags: |
             type=ref,event=tag
             type=raw,value=latest
