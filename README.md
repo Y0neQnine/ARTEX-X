@@ -69,23 +69,36 @@ AI 自主渗透测试系统（Go 后端 + Next.js 前端）
 ### 方式一：一键安装脚本（推荐）
 
 ```bash
-git clone https://github.com/Autumn-27/ARTEX.git
-cd ARTEX
+git clone https://github.com/Y0neQnine/ARTEX-X.git
+cd ARTEX-X
 ./install.sh
 ```
 
 脚本会：检测 / 自动安装 Docker → 让你选 **① 全部 Docker** 或 **② 本地编译运行**：
 
-- **① 全部 Docker**：填一个 Postgres 密码（可回车随机）→ 自动写 `.env` → `docker compose up -d`。
+- **① 全部 Docker**：填一个 Postgres 密码（可回车随机）→ 自动写 `.env` → 拉取 `y0neqnine/artex-x` 镜像并 `docker compose up -d`。
+  镜像拉取失败时（镜像未发布 / 网络不通），脚本会提示原因，并询问是否改走本地编译运行。
 - **② 本地运行**：选数据库（连已有 / 用 Docker 起一个）→ 生成 `config.json` → `go` 编译内嵌单二进制 → 启动。
 
 装好后打开 **http://localhost:8787**（首次进入 `/setup` 设置管理员密码）。
 
+> **国内网络提示**：直连 Docker Hub 可能超时，先给 Docker 配镜像加速再安装：
+>
+> ```bash
+> sudo tee /etc/docker/daemon.json >/dev/null <<'EOF'
+> { "registry-mirrors": ["https://<可用镜像站>/"] }
+> EOF
+> sudo systemctl restart docker
+> docker info | grep -A3 -i mirror   # 确认已生效
+> ```
+>
+> 公共镜像站变动频繁，先用 `curl -s -o /dev/null -w "%{http_code}" https://<镜像站>/v2/` 验证（返回 401/200 即可用），失效就换一个。
+
 ### 方式二：Docker Compose（手动）
 
 ```bash
-git clone https://github.com/Autumn-27/ARTEX.git
-cd ARTEX
+git clone https://github.com/Y0neQnine/ARTEX-X.git
+cd ARTEX-X
 cp .env.example .env          # 填 POSTGRES_PASSWORD、可选 ANTHROPIC_API_KEY
 docker compose up -d          # 拉取 y0neqnine/artex-x 镜像 + postgres
 # → http://localhost:8787
@@ -100,7 +113,7 @@ docker compose up -d          # 拉取 y0neqnine/artex-x 镜像 + postgres
 
 ### 方式三：下载预编译二进制（Releases）
 
-到 [Releases](https://github.com/Autumn-27/ARTEX/releases) 下载对应平台的 zip，解压后得到 `artex` + `start.sh`（Windows 为 `start.bat`）+ `skills/` + `config.example.json`：
+到 [Releases](https://github.com/Y0neQnine/ARTEX-X/releases) 下载对应平台的 zip，解压后得到 `artex` + `start.sh`（Windows 为 `start.bat`）+ `skills/` + `config.example.json`：
 
 ```bash
 cp config.example.json config.json   # 填好 database 连接

@@ -46,7 +46,15 @@ install_docker(){
     info "沿用已存在的 .env"
   fi
   info "拉取镜像并启动…"
-  docker compose pull || true
+  if ! docker compose pull; then
+    warn "镜像拉取失败：镜像可能尚未发布，或 Docker Hub 网络不通"
+    warn "国内网络可配置镜像加速：/etc/docker/daemon.json 加 registry-mirrors 后 systemctl restart docker（详见 README 方式一）"
+    if [ "$(ask '改为本地编译运行（方式②）? (y/n)' y)" = y ]; then
+      install_local
+      return
+    fi
+    die "已取消：请先解决镜像拉取问题后重试"
+  fi
   docker compose up -d
   ok "启动完成 → http://localhost:8787"
   info "查看日志：docker compose logs -f artex"
